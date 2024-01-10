@@ -10,7 +10,6 @@
     body {
         margin: 0;
         padding: 0;
-        background-image: url('/public/assets/background_image.jpg');
         background-size: cover;
         background-position: center;
         min-height: 100vh;
@@ -41,7 +40,7 @@
 
     .prompt>h1 {
         margin: 10%;
-        color: white
+        color: #f16632
     }
 
     .prompt input {
@@ -58,7 +57,7 @@
     }
 </style>
 
-<body>
+<body style="background-image: url('{{ url_for('static', filename='assets/background_image.jpg') }}');">
     <div class="elementor-widget-image">
         <a href="https://www.inadev.com">
             <img width="289" height="69" src="https://www.inadev.com/wp-content/uploads/2023/05/Inadev_logo.svg"
