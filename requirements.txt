@@ -1,6 +1,8 @@
 Flask
 openmeteo-requests
+opencage
 requests-cache
 retry-requests
 numpy
 pandas
+python-dotenv
