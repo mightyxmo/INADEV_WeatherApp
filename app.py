@@ -1,10 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from opencage.geocoder import OpenCageGeocode
-
-import openmeteo_requests
-import requests_cache
-from retry_requests import retry
-
+import requests
 import os
 import logging
 from dotenv import load_dotenv
@@ -12,14 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Lat/Long API
 opencage_api_key = os.getenv('OPENCAGE_API')
 geocoder = OpenCageGeocode(opencage_api_key)
-
-# Weather API Setup
-cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
-retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
-openmeteo = openmeteo_requests.Client(session = retry_session)
 
 app = Flask(__name__)
 
@@ -44,22 +34,26 @@ def fetch_weather_data(lat, lng):
         params = {
             "latitude": lat,
             "longitude": lng,
-            "hourly": "temperature_2m",
-            "temperature_unit": "fahrenheit"
+            "hourly": "temperature_2m,weather_code",
+            "temperature_unit": "fahrenheit",
+            "timezone": "EST"
         }
-        responses = openmeteo.weather_api(url, params=params)
+        response = requests.get(url, params=params)
+        data = response.json()
+        logging.info(f"data: {data}")
 
-        if responses:
-            response = responses[0]
-            hourly = response.Hourly()
-            hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()[0]
-            hourly_weather_code = hourly.Variables(1).ValuesAsNumpy()[0]
-            
-            weather = weather_condition(hourly_weather_code)
+        hourly_data = data.get('hourly', {})
+        temperatures = hourly_data.get('temperature_2m', [])
+        weather_codes = hourly_data.get('weather_code', [])
+
+        if temperatures and weather_codes:
+            temperature = temperatures[0]
+            weather_code = weather_codes[0]
+            weather_condition = get_weather_condition(weather_code)
 
             return {
-                "temperature": hourly_temperature_2m,
-                "condition": weather
+                "temperature": temperature,
+                "condition": weather_condition
             }
         else:
             logging.warning("Weather data not available.")
@@ -69,7 +63,7 @@ def fetch_weather_data(lat, lng):
         logging.error(f"Error occurred while fetching the weather data: {e}")
         return {"error": f"Error occurred while fetching the weather data: {e}"}
 
-def weather_condition(code):
+def get_weather_condition(code):
       if code == 0:
           return "clear-sky"
       elif 1 <= code <= 3:
