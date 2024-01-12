@@ -85,7 +85,7 @@ def get_weather_condition(code):
 
 def lat_lng_converter(zip_code):
     try:
-        location = geocoder.geocode(zip_code)
+        location = geocoder.geocode(zip_code, countrycode='us')
         if location:
             logging.info(f"Geocoding was successful for ZIP code: {zip_code}")
             return {
