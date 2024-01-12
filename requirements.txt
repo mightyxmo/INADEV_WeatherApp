@@ -1,0 +1,5 @@
+Flask
+opencage
+numpy
+python-dotenv
+requests
