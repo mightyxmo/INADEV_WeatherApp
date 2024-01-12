@@ -39,8 +39,11 @@
     }
 
     .prompt>h1 {
-        margin: 10%;
-        color: #f16632
+        margin: 5%;
+        color: #f16632;
+        background-color: white;
+        display: inline-block;
+        padding: 10px;
     }
 
     .prompt input {
@@ -55,13 +58,30 @@
         margin: 2%;
         background-color: #f16632;
     }
+
+    .results {
+        text-align: center;
+        display: none;
+        margin-top: 20px;
+        font-size: 5em;
+        color: #f16632;
+        font-weight: bold;
+    }
+
+    .result-item {
+        background-color: white;
+        padding: 10px;
+        margin: 5px;
+        display: inline-block;
+        vertical-align: middle;
+    }
 </style>
 
-<body style="background-image: url('{{ url_for('static', filename='assets/background_image.jpg') }}');">
+<body style="background-image: url('/static/assets/partly-cloudy.jpg');">
     <div class="elementor-widget-image">
         <a href="https://www.inadev.com">
             <img width="289" height="69" src="https://www.inadev.com/wp-content/uploads/2023/05/Inadev_logo.svg"
-                class="attachment-full size-full wp-image-43" alt="" style="width:100%;height:23.88%;max-width:289px">
+                class="attachment-full size-full wp-image-43" alt="logo" style="width:100%;height:23.88%;max-width:289px">
         </a>
     </div>
     <div class="prompt">
@@ -72,8 +92,54 @@
             <button type="submit">GO</button>
         </form>
     </div>
+    <div class="results" id="weatherResult" style="display: none;">
+    </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('zipcode', document.querySelector('input[name="zipcode"]').value);
+
+            fetch(`/getWeather`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('weatherResult');
+                    resultDiv.innerHTML = '';
+                    if (data.error) {
+
+                        resultDiv.innerText = data.error;
+                        resultDiv.style.display = "block";
+                        resultDiv.style.color = "#f16632";
+                        resultDiv.style.fontSize = "5em";
+                        resultDiv.style.fontWeight = "bold";
+                    } else {
+
+
+                        const tempElement = document.createElement('p');
+                        tempElement.textContent = `${data.temperature}°F`;
+                        tempElement.classList.add('result-item');
+                        resultDiv.appendChild(tempElement);
+
+                        const conditionElement = document.createElement('p');
+                        conditionElement.textContent = data.condition;
+                        conditionElement.classList.add('result-item');
+                        resultDiv.appendChild(conditionElement);
+
+                        resultDiv.style.display = "block";
+
+                        const imageUrl = `/static/assets/${data.condition}.jpg`;
+                        document.body.style.backgroundImage = `url('${imageUrl}')`;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+    </script>
 </body>
-
-
 
 </html>
