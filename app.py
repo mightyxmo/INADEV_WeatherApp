@@ -47,8 +47,8 @@ def fetch_weather_data(lat, lng):
         weather_codes = hourly_data.get('weather_code', [])
 
         if temperatures and weather_codes:
-            temperature = temperatures[0]
-            weather_code = weather_codes[0]
+            temperature = temperatures[-1]
+            weather_code = weather_codes[-1]
             weather_condition = get_weather_condition(weather_code)
 
             return {
