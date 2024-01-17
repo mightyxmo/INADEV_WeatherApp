@@ -41,20 +41,19 @@ def fetch_weather_data(lat, lng):
         response = requests.get(url, params=params)
         data = response.json()
 
-        hourly_data = data.get('hourly', {})
-        times = hourly_data.get('time',[])
-        temperatures = hourly_data.get('temperature_2m', [])
-        weather_codes = hourly_data.get('weather_code', [])
+        daily_data = data.get('daily', {})
+        max_temp = daily_data.get('temperature_2m_max', [])
+        min_temp = daily_data.get('temperature_2m_min', [])
+        weather_code = daily_data.get('weather_code', [])
 
-        logging.info(f"Time: {times[-1]}, Temp: {temperatures[-1]}, Condition: {weather_codes[-1]}")
+        logging.info(f"{daily_data}")
 
-        if temperatures and weather_codes:
-            temperature = temperatures[-1]
-            weather_code = weather_codes[-1]
+        if max_temp and min_temp and weather_code:
             weather_condition = get_weather_condition(weather_code)
 
             return {
-                "temperature": temperature,
+                "max_temperature": max_temp,
+                "min_temperature": min_temp,
                 "condition": weather_condition
             }
         else:
