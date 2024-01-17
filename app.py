@@ -34,7 +34,7 @@ def fetch_weather_data(lat, lng):
         params = {
             "latitude": lat,
             "longitude": lng,
-            "hourly": "temperature_2m,weather_code",
+            "daily": "temperature_2m_max,temperature_2m_min,weather_code",
             "temperature_unit": "fahrenheit",
             "timezone": "EST"
         }
@@ -46,16 +46,20 @@ def fetch_weather_data(lat, lng):
         min_temp = daily_data.get('temperature_2m_min', [])
         weather_code = daily_data.get('weather_code', [])
 
-        logging.info(f"{daily_data}")
+        logging.info(f"{data}")
 
         if max_temp and min_temp and weather_code:
-            weather_condition = get_weather_condition(weather_code)
-
-            return {
-                "max_temperature": max_temp,
-                "min_temperature": min_temp,
-                "condition": weather_condition
-            }
+            weather_forecast = []
+            for i in range(len(max_temp)):
+                daily_condition = get_weather_condition(weather_code[i])
+                weather_forecast.append({
+                    "date": daily_data['time'][i],
+                    "max_temperature": max_temp[i],
+                    "min_temperature": min_temp[i],
+                    "condition": daily_condition
+                })
+            
+            return weather_forecast
         else:
             logging.warning("Weather data not available.")
             return {"error": "Weather data not available."}

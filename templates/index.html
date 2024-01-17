@@ -62,18 +62,14 @@
     .results {
         text-align: center;
         display: none;
-        margin-top: 20px;
-        font-size: 5em;
-        color: #f16632;
-        font-weight: bold;
+        margin: 20px;
     }
 
-    .result-item {
-        background-color: white;
-        padding: 10px;
-        margin: 5px;
-        display: inline-block;
-        vertical-align: middle;
+    .weather-icon {
+        width: 100px;
+        height: 100px;
+        margin-top: 20px;
+        margin-bottom: 20px;
     }
 </style>
 
@@ -81,7 +77,8 @@
     <div class="elementor-widget-image">
         <a href="https://www.inadev.com">
             <img width="289" height="69" src="https://www.inadev.com/wp-content/uploads/2023/05/Inadev_logo.svg"
-                class="attachment-full size-full wp-image-43" alt="logo" style="width:100%;height:23.88%;max-width:289px">
+                class="attachment-full size-full wp-image-43" alt="logo"
+                style="width:100%;height:23.88%;max-width:289px">
         </a>
     </div>
     <div class="prompt">
@@ -92,7 +89,7 @@
             <button type="submit">GO</button>
         </form>
     </div>
-    <div class="results" id="weatherResult" style="display: none;">
+    <div class="results" id="weatherResult">
     </div>
 
     <script>
@@ -118,22 +115,58 @@
                         resultDiv.style.fontSize = "5em";
                         resultDiv.style.fontWeight = "bold";
                     } else {
-
-
-                        const tempElement = document.createElement('p');
-                        tempElement.textContent = `${data.temperature}°F`;
-                        tempElement.classList.add('result-item');
-                        resultDiv.appendChild(tempElement);
-
-                        const conditionElement = document.createElement('p');
-                        conditionElement.textContent = data.condition;
-                        conditionElement.classList.add('result-item');
-                        resultDiv.appendChild(conditionElement);
-
-                        resultDiv.style.display = "block";
-
-                        const imageUrl = `/static/assets/${data.condition}.jpg`;
+                        const imageUrl = `/static/assets/${data[0].condition}.jpg`;
                         document.body.style.backgroundImage = `url('${imageUrl}')`;
+
+                        const wrapperDiv = document.createElement('div');
+                        wrapperDiv.style.display = 'flex';
+                        wrapperDiv.style.alignItems = 'baseline';
+                        wrapperDiv.style.flexWrap = 'wrap';
+                        wrapperDiv.style.justifyContent = 'center';
+
+                        data.forEach(day => {
+
+                            const dayDiv = document.createElement('div');
+                            dayDiv.style.display = 'flex';
+                            dayDiv.style.flexDirection = 'column';
+                            dayDiv.style.alignItems = 'center';
+                            dayDiv.style.padding = '5px';
+                            dayDiv.style.borderWidth = '5px';
+                            dayDiv.style.borderStyle = 'solid';
+                            dayDiv.style.borderColor = 'white';
+                            dayDiv.style.borderRadius = '5%';
+                            dayDiv.style.margin = '10px';
+
+                            const dateElement = document.createElement('p');
+                            dateElement.textContent = `${day.date}`
+                            dateElement.style.fontSize = '2rem';
+                            dateElement.style.marginTop = '5px';
+                            dayDiv.appendChild(dateElement);
+
+                            const iconElement = document.createElement('img');
+                            iconElement.src = `/static/assets/icons/${day.condition}.png`;
+                            iconElement.classList.add('weather-icon');
+                            dayDiv.appendChild(iconElement);
+
+                            const maxTempElement = document.createElement('p');
+                            maxTempElement.textContent = `Max: ${day.max_temperature}°F`;
+                            maxTempElement.style.fontSize = '2rem';
+                            maxTempElement.style.fontWeight = 'bold';
+                            maxTempElement.style.color = '#f16632';
+                            dayDiv.appendChild(maxTempElement);
+
+                            const minTempElement = document.createElement('p');
+                            minTempElement.textContent = `Min: ${day.min_temperature}°F`;
+                            minTempElement.style.fontSize = '1rem';
+                            minTempElement.style.color = '#f16632';
+                            dayDiv.appendChild(minTempElement);
+
+                            wrapperDiv.appendChild(dayDiv);
+                        });
+
+                        resultDiv.appendChild(wrapperDiv);
+                        resultDiv.style.display = "flex";
+                        resultDiv.style.justifyContent = "center";
                     }
                 })
                 .catch(error => console.error('Error:', error));
