@@ -27,7 +27,7 @@ def lat_lng_converter(zip_code):
         return None
 ```
 
-After we have the coordinate data, we then access the Open-Meteo API to take in the weather data:
+After we have the coordinate data, we then access the Open-Meteo API to take in the daily weather data:
 
 ```
 def fetch_weather_data(lat, lng):
@@ -36,27 +36,32 @@ def fetch_weather_data(lat, lng):
         params = {
             "latitude": lat,
             "longitude": lng,
-            "hourly": "temperature_2m,weather_code",
+            "daily": "temperature_2m_max,temperature_2m_min,weather_code",
             "temperature_unit": "fahrenheit",
             "timezone": "EST"
         }
         response = requests.get(url, params=params)
         data = response.json()
-        logging.info(f"data: {data}")
 
-        hourly_data = data.get('hourly', {})
-        temperatures = hourly_data.get('temperature_2m', [])
-        weather_codes = hourly_data.get('weather_code', [])
+        daily_data = data.get('daily', {})
+        max_temp = daily_data.get('temperature_2m_max', [])
+        min_temp = daily_data.get('temperature_2m_min', [])
+        weather_code = daily_data.get('weather_code', [])
 
-        if temperatures and weather_codes:
-            temperature = temperatures[0]
-            weather_code = weather_codes[0]
-            weather_condition = get_weather_condition(weather_code)
+        logging.info(f"{data}")
 
-            return {
-                "temperature": temperature,
-                "condition": weather_condition
-            }
+        if max_temp and min_temp and weather_code:
+            weather_forecast = []
+            for i in range(len(max_temp)):
+                daily_condition = get_weather_condition(weather_code[i])
+                weather_forecast.append({
+                    "date": daily_data['time'][i],
+                    "max_temperature": max_temp[i],
+                    "min_temperature": min_temp[i],
+                    "condition": daily_condition
+                })
+            
+            return weather_forecast
         else:
             logging.warning("Weather data not available.")
             return {"error": "Weather data not available."}
@@ -65,6 +70,30 @@ def fetch_weather_data(lat, lng):
         logging.error(f"Error occurred while fetching the weather data: {e}")
         return {"error": f"Error occurred while fetching the weather data: {e}"}
 ```
-When the data is fetched by the front end, the screen will display the temperature (in fahrenheit) and the weather condition (with a fun little background change).
+Open-Meteo uses WMO weather codes for categorizing weather conditions, so readable text is needed to understand the results:
 
-![image](https://github.com/mightyxmo/INADEV_WeatherApp/assets/46232003/bd9dc079-4cf5-440e-96db-ac13fd2c7e68)
+```
+def get_weather_condition(code):
+      if code == 0:
+          return "clear-sky"
+      elif 1 <= code <= 3:
+          return "partly-cloudy"
+      elif code in [45, 48]:
+          return "fog"
+      elif 51 <= code <= 55 or 56 <= code <= 57:
+          return "drizzle"
+      elif 61 <= code <= 65 or 66 <= code <= 67:
+          return "rain"
+      elif 71 <= code <= 75 or code == 77:
+          return "snow"
+      elif 80 <= code <= 82 or 85 <= code <= 86:
+          return "showers"
+      elif 95 <= code <= 99:
+          return "thunderstorm"
+      else:
+          return "overcast"
+```
+ 
+When the data is fetched by the front end, the screen will display the max and min daily temperature (in fahrenheit) and the weather condition using an icon (also a fun little background change for today's weather).
+
+<img width="1239" alt="Screenshot 2024-01-17 at 6 32 15 PM" src="https://github.com/mightyxmo/INADEV_WeatherApp/assets/46232003/c7b73ff3-6de1-442e-bf74-1f09cae1e291">
