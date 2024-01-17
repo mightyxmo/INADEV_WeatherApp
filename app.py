@@ -34,29 +34,32 @@ def fetch_weather_data(lat, lng):
         params = {
             "latitude": lat,
             "longitude": lng,
-            "hourly": "temperature_2m,weather_code",
+            "daily": "temperature_2m_max,temperature_2m_min,weather_code",
             "temperature_unit": "fahrenheit",
             "timezone": "EST"
         }
         response = requests.get(url, params=params)
         data = response.json()
 
-        hourly_data = data.get('hourly', {})
-        times = hourly_data.get('time',[])
-        temperatures = hourly_data.get('temperature_2m', [])
-        weather_codes = hourly_data.get('weather_code', [])
+        daily_data = data.get('daily', {})
+        max_temp = daily_data.get('temperature_2m_max', [])
+        min_temp = daily_data.get('temperature_2m_min', [])
+        weather_code = daily_data.get('weather_code', [])
 
-        logging.info(f"Time: {times[-1]}, Temp: {temperatures[-1]}, Condition: {weather_codes[-1]}")
+        logging.info(f"{data}")
 
-        if temperatures and weather_codes:
-            temperature = temperatures[-1]
-            weather_code = weather_codes[-1]
-            weather_condition = get_weather_condition(weather_code)
-
-            return {
-                "temperature": temperature,
-                "condition": weather_condition
-            }
+        if max_temp and min_temp and weather_code:
+            weather_forecast = []
+            for i in range(len(max_temp)):
+                daily_condition = get_weather_condition(weather_code[i])
+                weather_forecast.append({
+                    "date": daily_data['time'][i],
+                    "max_temperature": max_temp[i],
+                    "min_temperature": min_temp[i],
+                    "condition": daily_condition
+                })
+            
+            return weather_forecast
         else:
             logging.warning("Weather data not available.")
             return {"error": "Weather data not available."}
