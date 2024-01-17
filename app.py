@@ -40,11 +40,13 @@ def fetch_weather_data(lat, lng):
         }
         response = requests.get(url, params=params)
         data = response.json()
-        logging.info(f"data: {data}")
 
         hourly_data = data.get('hourly', {})
+        times = hourly_data.get('time',[])
         temperatures = hourly_data.get('temperature_2m', [])
         weather_codes = hourly_data.get('weather_code', [])
+
+        logging.info(f"Time: {times[-1]}, Temp: {temperatures[-1]}, Condition: {weather_codes[-1]}")
 
         if temperatures and weather_codes:
             temperature = temperatures[-1]
